@@ -119,7 +119,7 @@ func main() {
 			log.Println("Object", *obj.Key, "transferred successfully from MinIO to S3.")
 		}
 
-		return true
+		return !lastPage
 	})
 
 	if err != nil {
