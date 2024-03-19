@@ -3,10 +3,10 @@
 ## Usage
 
 ```bash
-go run main.go -bucket <string> [-minio-region <string>] [-minio-endpoint <string>] [-minio-access-key <string>] [-minio-secret-key <string>] [-s3-region <string>] [-s3-endpoint <string>] [-s3-access-key <string>] [-s3-secret-key <string>]
+go run main.go [-minio-bucket <string>] [-minio-region <string>] [-minio-endpoint <string>] [-minio-access-key <string>] [-minio-secret-key <string>] [-s3-region <string>] [-s3-endpoint <string>] [-s3-access-key <string>] [-s3-secret-key <string>]
 
-  -bucket [string]
-        The name of the S3 bucket to list objects from.
+  -minio-bucket [string]
+        The bucket of the MinIO server.
   -minio-region [string]
         The region of the MinIO server.
   -minio-endpoint [string]
@@ -15,6 +15,8 @@ go run main.go -bucket <string> [-minio-region <string>] [-minio-endpoint <strin
         The access key for the MinIO server.
   -minio-secret-key [string]
         The secret key for the MinIO server.
+  -s3-bucket [string]
+        The bucket of the S3 server.
   -s3-region [string]
         The region of the S3 server.
   -s3-endpoint [string]

@@ -13,12 +13,12 @@ import (
 )
 
 var (
-	bucketName  string
 	minioConfig MinioConfig
 	s3Config    S3Config
 )
 
 type MinioConfig struct {
+	Bucket    string
 	Region    string
 	Endpoint  string
 	AccessKey string
@@ -26,6 +26,7 @@ type MinioConfig struct {
 }
 
 type S3Config struct {
+	Bucket    string
 	Region    string
 	Endpoint  string
 	AccessKey string
@@ -33,13 +34,13 @@ type S3Config struct {
 }
 
 func init() {
-	flag.StringVar(&bucketName, "bucket", "", "Name of the S3 bucket to list objects from.")
-
+	flag.StringVar(&minioConfig.Bucket, "minio-bucket", "", "Bucket of the MinIO server.")
 	flag.StringVar(&minioConfig.Region, "minio-region", "", "Region of the MinIO server.")
 	flag.StringVar(&minioConfig.Endpoint, "minio-endpoint", "", "Endpoint of the MinIO server.")
 	flag.StringVar(&minioConfig.AccessKey, "minio-access-key", "", "Access key for the MinIO server.")
 	flag.StringVar(&minioConfig.SecretKey, "minio-secret-key", "", "Secret key for the MinIO server.")
 
+	flag.StringVar(&s3Config.Bucket, "s3-bucket", "", "Bucket of the S3 server.")
 	flag.StringVar(&s3Config.Region, "s3-region", "", "Region of the S3 server.")
 	flag.StringVar(&s3Config.Endpoint, "s3-endpoint", "", "Endpoint of the S3 server.")
 	flag.StringVar(&s3Config.AccessKey, "s3-access-key", "", "Access key for the S3 server.")
@@ -49,7 +50,8 @@ func init() {
 func main() {
 	flag.Parse()
 
-	validateArgs()
+	validateMinioConfig()
+	validateS3Config()
 
 	minioSession, err := session.NewSession(&aws.Config{
 		Credentials:      credentials.NewStaticCredentials(minioConfig.AccessKey, minioConfig.SecretKey, ""),
@@ -58,7 +60,7 @@ func main() {
 		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
 	})
-	minioParams := &s3.ListObjectsV2Input{Bucket: &bucketName}
+	minioParams := &s3.ListObjectsV2Input{Bucket: &minioConfig.Bucket}
 
 	if err != nil {
 		log.Fatalln("Failed to create AWS session:", err)
@@ -84,7 +86,7 @@ func main() {
 		for _, obj := range output.Contents {
 
 			object, err := minioClient.GetObject(&s3.GetObjectInput{
-				Bucket: aws.String(bucketName),
+				Bucket: aws.String(minioConfig.Bucket),
 				Key:    obj.Key,
 			})
 
@@ -103,7 +105,7 @@ func main() {
 			object.Body.Close()
 
 			_, err = awsClient.PutObject(&s3.PutObjectInput{
-				Bucket:      aws.String(bucketName),
+				Bucket:      aws.String(s3Config.Bucket),
 				Key:         obj.Key,
 				Metadata:    object.Metadata,
 				ContentType: object.ContentType,
@@ -128,10 +130,10 @@ func main() {
 	log.Println("All objects transferred successfully from MinIO to S3.")
 }
 
-func validateArgs() {
-	if bucketName == "" {
+func validateMinioConfig() {
+	if minioConfig.Bucket == "" {
 		flag.PrintDefaults()
-		log.Fatalf("Invalid parameters, bucket name required")
+		log.Fatalf("Invalid parameters, minio-bucket required")
 	}
 
 	if minioConfig.Region == "" {
@@ -152,6 +154,13 @@ func validateArgs() {
 	if minioConfig.SecretKey == "" {
 		flag.PrintDefaults()
 		log.Fatalf("Invalid parameters, minio-secret-key required")
+	}
+}
+
+func validateS3Config() {
+	if s3Config.Bucket == "" {
+		flag.PrintDefaults()
+		log.Fatalf("Invalid parameters, s3-bucket required")
 	}
 
 	if s3Config.Region == "" {
